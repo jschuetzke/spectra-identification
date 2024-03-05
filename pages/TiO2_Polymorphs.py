@@ -14,6 +14,9 @@ st.sidebar.header("TiO$_2$ Classification Demo")
 MODEL_NAME = "tio2_class"
 MODEL_URL = st.secrets["model_url"]
 
+TS_USER = st.secrets["ts_user"]
+TS_PWD = st.secrets["ts_password"]
+
 RRUFF_IDs = [
     "R060277",
     "R070582",
@@ -80,7 +83,7 @@ def get_rruff_data():
 def get_prediction(signal):
     data_bytes = signal.tobytes()
     res = requests.post(
-        f"http://{MODEL_URL}/predictions/{MODEL_NAME}", files={"data": data_bytes}
+        f"http://{MODEL_URL}/predictions/{MODEL_NAME}", files={"data": data_bytes}, auth=(TS_USER,TS_PWD)
     )
     return res.json()
 
