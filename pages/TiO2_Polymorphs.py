@@ -83,7 +83,7 @@ def get_rruff_data():
 def get_prediction(signal):
     data_bytes = signal.tobytes()
     res = requests.post(
-        f"http://{MODEL_URL}/predictions/{MODEL_NAME}", files={"data": data_bytes}, auth=(TS_USER,TS_PWD)
+        f"http://{MODEL_URL}/{MODEL_NAME}", files={"data": data_bytes}, auth=(TS_USER,TS_PWD)
     )
     return res.json()
 
