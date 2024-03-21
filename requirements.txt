@@ -1,1 +1,2 @@
 plotly
+git+https://github.com/jschuetzke/python-powder-diffraction.git
