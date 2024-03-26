@@ -198,7 +198,7 @@ sel = st.sidebar.selectbox("Inspect prediction:", all_options)
 
 if sel != "Overview": # assume str(index)
     signal = st.session_state['batch'][int(sel)-1]
-    prob = st.session_state["probs"][0]
+    prob = st.session_state["probs"][int(sel)-1]
     df = pd.DataFrame()
     df['steps'] = steps
     df['signal'] = signal
