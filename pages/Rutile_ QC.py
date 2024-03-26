@@ -54,11 +54,11 @@ def generate_variations(
     step_size=0.01,
     impurity_raio = 0.2,
     max_multi_peak = 0.3,
-    detection_threshold = 0.05,
+    detection_threshold = 0.5,
     num_multi_peaks = 2,
     restricted_area = 25,
-    fwhm_range = (0.2, 0.7),
-    noise_lvl = (0.03, 0.07),
+    fwhm_range = (0.2, 0.4),
+    noise_lvl = (0.01, 0.03),
     seed = None,
 ):
     # patterns should be scaled between 0 and 1
