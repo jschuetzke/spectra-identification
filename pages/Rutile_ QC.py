@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import json
+import base64
 import requests
 from pymatgen.core import Structure
 from powdiffrac.processing import scale_min_max
@@ -151,28 +153,30 @@ def get_new_batch():
     st.session_state['batch'] = get_signals()
     return
 
-def query(data_bytes):
+def query(payload):
+    headers = {"Content-type": "application/json", "Accept": "text/plain"}
     res = requests.post(
-        f"http://{MODEL_URL}/{MODEL_NAME}", files={"data": data_bytes}, auth=(TS_USER,TS_PWD)
+        f"http://{MODEL_URL}/{MODEL_NAME}", data=payload, auth=(TS_USER, TS_PWD), headers=headers
     )
     if res.status_code == 503:
         time.sleep(2)
-        return query(data_bytes)
+        return query(payload)
     return res
+
 
 @st.cache_data(show_spinner=False)
 def predict_batch(x):
     rows = x.shape[0]
     probs = np.zeros(rows)
-    bar = st.progress(0, text="querying model...")
+    payload = {}
     for i in range(rows):
-        res = query(x[i].tobytes())
-        probs[i] = res.json()['impurity']
-        if (i % 4) == 3:
-            time.sleep(5)
-        bar.progress((i+1)/rows)
-    bar.empty()
-    return probs
+        data = x[i].tobytes()
+        data_b64 = base64.b64encode(data).decode("utf8")
+        payload[str(i)] = data_b64
+    payload = json.dumps(payload)
+    response = query(payload).json()
+    probs = [response[i]["impurity"] for i in range(len(response))]
+    return np.array(probs)
 
 if 'batch' not in st.session_state:
     st.session_state['batch'] = get_batch()
