@@ -150,7 +150,7 @@ def get_batch(n=25):
     return var
 
 def get_new_batch():
-    st.session_state['batch'] = get_signals()
+    st.session_state['batch'] = get_batch()
     return
 
 def query(payload):
