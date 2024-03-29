@@ -23,6 +23,12 @@ MODEL_URL = st.secrets["model_url"]
 TS_USER = st.secrets["ts_user"]
 TS_PWD = st.secrets["ts_password"]
 
+PROPERTIES = ["impurity", "cryst_size"]
+PROP_LABELS = {
+    "impurity": "Purity",
+    "cryst_size": "Crystallite size"
+}
+
 @st.cache_data
 def get_powder():
     url = "http://www.crystallography.net/cod/9007432.cif"
@@ -32,10 +38,8 @@ def get_powder():
         struct,
         two_theta=(20,70),
         step_size=0.02,
-        max_domain_size=20,
         max_strain=0.01,
         vary_strain=True,
-        vary_domain=True
     )
     powder._domain_size = 0
     return powder
@@ -56,10 +60,10 @@ def generate_variations(
     step_size=0.01,
     impurity_raio = 0.2,
     max_multi_peak = 0.3,
-    detection_threshold = 0.5,
+    detection_threshold = 0.05,
     num_multi_peaks = 2,
     restricted_area = 25,
-    fwhm_range = (0.2, 0.4),
+    fwhm_range = (0.15, 0.5),
     noise_lvl = (0.01, 0.03),
     seed = None,
 ):
@@ -121,12 +125,16 @@ def generate_variations(
     # %% convolve peak shapes
 
     fwhm = rng.uniform(fwhm_range[0], fwhm_range[1], size=num_scans)
-    eta = rng.uniform(0.1, 0.9, size=num_scans)
+    # eta = rng.uniform(0.1, 0.9, size=num_scans)
     for n in np.arange(num_scans):
-        kernel = peak_shapes.get_pseudo_voigt_kernel(fwhm[n], step_size, eta[n])
+        # kernel = peak_shapes.get_pseudo_voigt_kernel(fwhm[n], step_size, eta[n])
+        kernel = peak_shapes.get_gaussian_kernel(fwhm[n], step_size)
         x[n] = convolve1d(x[n], kernel, mode="constant")
 
     x = scale_min_max(x)
+
+    y2 = fwhm >= 0.425
+    y2 = y2.astype(int)
 
     # correct absolute intensities due to peak broadening
     x *= np.sqrt(np.maximum(1 - fwhm, 0.3))[:, None]
@@ -141,17 +149,22 @@ def generate_variations(
     # scale noise
     gaus *= noise_lvls[:, None]
     x += gaus
-    return x, y
+
+    target = np.zeros([y.size, 2])
+    target[:,0] = y
+    target[:,1] = y2
+    return x, target
 
 def get_batch(n=25):
     c = get_powder()
     s = get_signals(c, n)[:,:-1] # cut last step
-    var, y = generate_variations(s, c.step_size)
-    return var
+    return generate_variations(s, c.step_size)
 
-def get_new_batch():
-    st.session_state['batch'] = get_batch()
-    return
+def get_data():
+    batch, labels = get_batch()
+    st.session_state["batch"] = batch
+    st.session_state["labels"] = labels
+    return 
 
 def query(payload):
     headers = {"Content-type": "application/json", "Accept": "text/plain"}
@@ -175,13 +188,16 @@ def predict_batch(x):
         payload[str(i)] = data_b64
     payload = json.dumps(payload)
     response = query(payload).json()
-    probs = [response[i]["impurity"] for i in range(len(response))]
-    return np.array(probs)
+    preds = np.zeros([len(response), len(PROPERTIES)])
+    for i, key in enumerate(PROPERTIES):
+        probs = [response[j][key] for j in range(len(response))]
+        preds[:,i] = np.array(probs)
+    return preds
 
 if 'batch' not in st.session_state:
-    st.session_state['batch'] = get_batch()
+    get_data()
 
-st.sidebar.button("Get new batch", on_click=get_new_batch)
+st.sidebar.button("Get new batch", on_click=get_data)
 
 signal = st.session_state['batch'][0]
 steps = np.linspace(20.,70., 2500, endpoint=False)
@@ -196,32 +212,51 @@ all_options.extend([str(i+1) for i in range(25)])
 
 sel = st.sidebar.selectbox("Inspect prediction:", all_options)
 
-if sel != "Overview": # assume str(index)
-    signal = st.session_state['batch'][int(sel)-1]
-    prob = st.session_state["probs"][int(sel)-1]
+if sel != "Overview":  # assume str(index)
+    signal = st.session_state["batch"][int(sel) - 1]
+    prob = 1 - st.session_state["probs"][int(sel) - 1]
     df = pd.DataFrame()
-    df['steps'] = steps
-    df['signal'] = signal
+    df["steps"] = steps
+    df["signal"] = signal
     fig = px.line(
         df,
         x="steps",
         y="signal",
     )
     frame.plotly_chart(fig)
-    if prob < 0.5:
-        label.text("Sample predicted pure with confidence "+str(round(1- prob, 4)*100))
-    else:
-        label.text("Sample predicted impure with confidence "+str(round(prob, 4)*100))
-else: # Overview
+    properties = pd.DataFrame()
+    properties["Property"] = ""
+    for i, key in enumerate(PROPERTIES):
+        properties.loc[i, "Property"] = PROP_LABELS[key]
+    properties["Metric"] = np.round(prob, 4) * 100
+    label.dataframe(
+        properties,
+        column_config={
+        "Metric": st.column_config.ProgressColumn(
+            "Metric",
+            help="Compliance with QC",
+            format="%.2f%%",
+            min_value=0,
+            max_value=100,
+            ),
+        },
+        hide_index=True,
+        use_container_width=True
+    )
+else:  # Overview
     all_probs = st.session_state["probs"]
     if all_probs.size == 1:
         all_probs = np.repeat(all_probs, 25, axis=0)
-    # Create a DataFrame with indices (1-25)
-    df = pd.DataFrame(np.arange(1, 26).reshape(5, 5))
+    else:
+        # Create a DataFrame with indices (1-25)
+        df = pd.DataFrame(np.arange(1, 26).reshape(5, 5))
+
     # Define a function to apply color coding based on array values
     def color_coding(val):
-        color = 'green' if all_probs[val-1] < 0.5 else 'red'
-        return f'color: {color}'
+        color = "green" if np.max(all_probs[val - 1]) < 0.5 else "red"
+        return f"color: {color}"
 
     frame.dataframe(df.style.applymap(color_coding))
-    label.text("Samples identified as impure are highlighted in red. \nSelect sample in sidebar to inspect in detail")
+    label.text(
+        "Samples that do not align with the defined quality control properties are highlighted in red. \nSelect sample in sidebar to inspect in detail"
+    )
