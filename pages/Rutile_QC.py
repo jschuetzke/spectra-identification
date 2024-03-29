@@ -258,5 +258,5 @@ else:  # Overview
 
     frame.dataframe(df.style.applymap(color_coding))
     label.text(
-        "Samples that do not align with the defined quality control properties are highlighted in red. \nSelect sample in sidebar to inspect in detail"
+        "Samples not compliant with QC guidelines are highlighted in red. \nSelect sample in sidebar to inspect in detail"
     )
