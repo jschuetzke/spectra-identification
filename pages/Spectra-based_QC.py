@@ -37,7 +37,7 @@ def get_powder():
     struct = Structure.from_str(res.content.decode("UTF-8"), fmt="cif")
     ideal_pow = Powder(struct, (20,70), 0.02)
     ideal_pow._domain_size = 0
-    st.session_state['ideal'] = ideal_pow.get_signal()[:-1]
+    ideal_pattern = ideal_pow.get_signal()[:-1] # st.session_state['ideal']
     powder = Powder(
         struct,
         two_theta=(20,70),
@@ -46,7 +46,7 @@ def get_powder():
         vary_strain=True,
     )
     powder._domain_size = 0
-    return powder
+    return powder, ideal_pattern
 
 def get_signals(
     powder_class,
@@ -160,7 +160,7 @@ def generate_variations(
     return x, target
 
 def get_batch(n=25):
-    c = get_powder()
+    c, st.session_state['ideal'] = get_powder()
     s = get_signals(c, n)[:,:-1] # cut last step
     return generate_variations(s, c.step_size)
 
