@@ -34,6 +34,9 @@ def get_powder():
     url = "http://www.crystallography.net/cod/9007432.cif"
     res = requests.get(url)
     struct = Structure.from_str(res.content.decode("UTF-8"), fmt="cif")
+    ideal_pow = Powder(struct, (20,70), 0.02)
+    ideal_pow._domain_size = 0
+    st.session_state['ideal'] = ideal_pow.get_signal()[:-1]
     powder = Powder(
         struct,
         two_theta=(20,70),
@@ -217,11 +220,13 @@ if sel != "Overview":  # assume str(index)
     prob = 1 - st.session_state["probs"][int(sel) - 1]
     df = pd.DataFrame()
     df["steps"] = steps
-    df["signal"] = signal
+    df["Measured"] = signal
+    df["Ideal-Rutile"] = scale_min_max(st.session_state['ideal'])
+    df.set_index("steps", drop=True, inplace=True)
     fig = px.line(
         df,
-        x="steps",
-        y="signal",
+        x=df.index,
+        y=df.columns,
     )
     frame.plotly_chart(fig)
     properties = pd.DataFrame()
