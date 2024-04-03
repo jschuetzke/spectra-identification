@@ -11,11 +11,12 @@ from powdiffrac.simulation import peak_shapes, generate_noise, Powder
 from scipy.ndimage import binary_dilation, convolve1d
 import time
 
-st.set_page_config(page_title="Rutile Sample QC", page_icon="🎯")
+st.set_page_config(page_title="Spectra-based QC", page_icon="🔬")
 
-st.markdown("# TiO$_2$ Nanoparticle Quality control based on spectra")
-st.write("Identify impure rutile samples based on their powder XRD pattern")
+st.title("Nanoparticle Quality Control")
+st.markdown("In a theoretical high-throughput pipeline for producing titanium oxide nanoparticles (rutile structure), an XRD instrument is employed to analyze the resulting samples. A neural network is applied to identify those samples that do not align with the QC guidelines based on the corresponding XRD pattern.")
 st.sidebar.header("Rutile QC Demo")
+st.sidebar.markdown("Realistic XRD patterns are simulated to demonstrate the convenience of applying neural networks in high-throughput environemnts.")
 
 MODEL_NAME = "rutile"
 MODEL_URL = st.secrets["model_url"]
@@ -265,3 +266,12 @@ else:  # Overview
     label.text(
         "Samples not compliant with QC guidelines are highlighted in red. \nSelect sample in sidebar to inspect in detail"
     )
+
+st.sidebar.divider()
+st.sidebar.write("## Info:")
+st.sidebar.markdown(
+    "In high-throughput production, the objective is to fabricate a defined substance in large quantity. "\
+    + "Spectroscopic techniques enable destruction-free analysis of the resulting samples. "\
+    + "Numerous irregularities may arise during substance production, such as the presence of impurities or mismatches in relevant properties. "\
+    + "Neural network-based analysis of the raw measurements provides a rapid assessment of the produced samples."
+)
