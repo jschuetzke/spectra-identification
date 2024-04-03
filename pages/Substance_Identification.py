@@ -5,11 +5,14 @@ import plotly.express as px
 from io import StringIO
 import requests
 
-st.set_page_config(page_title="TiO2 Polymorphs", page_icon="🎯")
+st.set_page_config(page_title="Substance Identification", page_icon="🎯")
 
-st.markdown("# TiO$_2$ Nanoparticle Classification")
-st.write("Identify TiO$_2$ samples based on their powder XRD pattern")
-st.sidebar.header("TiO$_2$ Classification Demo")
+# st.markdown("# TiO$_2$ Nanoparticle Classification")
+st.title("Mineral Identification via XRD")
+st.markdown("Various titanium oxide samples are analyzed through the X-ray diffraction (XRD) technique in order to determine their structural arrangement. The corresponding mineral class can be determined based on the positions and intensities of peaks in the spectroscopic signal. Instead of manually comparing the measured signals with references, a neural network is employed for automatic identification of the samples.")
+# st.write("Automatic classification of TiO$_2$ samples based on their powder XRD pattern")
+st.sidebar.header("TiO$_2$ Polymorph Identification")
+st.sidebar.markdown("The [RRUFF database](https://rruff.info) provides spectroscopic signals for various minerals. Select a sample from the RRUFF database for the neural network to identify.")
 
 MODEL_NAME = "tio2_class"
 MODEL_URL = st.secrets["model_url"]
@@ -88,10 +91,10 @@ def get_prediction(signal):
     return res.json()
 
 
-option = st.sidebar.selectbox("Select measurement from RRUFF:", RRUFF_IDs)
+option = st.sidebar.selectbox("Selected RRUFF ID:", RRUFF_IDs)
 st.sidebar.divider()
 st.sidebar.write("## Info:")
-st.sidebar.write(
+st.sidebar.markdown(
     "TiO$_2$ samples can crystallize in different arrangements (see [wikipedia](https://en.wikipedia.org/wiki/Titanium_dioxide#Structure)). "\
     + "Methods including X-ray diffraction (XRD) allow to analyze the crystalline structure of samples. "\
     + "Therefore, analysis of the XRD patterns enables the identification of the underlying TiO$_2$ structure."
@@ -109,7 +112,7 @@ fig = px.line(
     scan_df,
     x="2 Theta",
     y="Count",
-    title=f'XRD scan with ID {option} and label "{labels[option]}"',
+    title=f'XRD scan with RRUFF ID {option} and label "{labels[option]}"',
 )
 st.plotly_chart(fig)
 
@@ -117,8 +120,8 @@ prediction = get_prediction(all_scans[idx])
 
 df = pd.DataFrame.from_dict(prediction, orient="index", columns=["Prediction"])
 
-st.write(
-    f'The model predicted "{str.capitalize(df["Prediction"].idxmax())}" with a confidence of {np.format_float_positional(df["Prediction"].max()*100,2)}%'
+st.markdown(
+    f'**Model prediction: "{str.capitalize(df["Prediction"].idxmax())}"** (confidence: {np.format_float_positional(df["Prediction"].max()*100,2)}%)'
 )
 
 st.divider()
