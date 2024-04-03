@@ -275,3 +275,12 @@ st.sidebar.markdown(
     + "Numerous irregularities may arise during substance production, such as the presence of impurities or mismatches in relevant properties. "\
     + "Neural network-based analysis of the raw measurements provides a rapid assessment of the produced samples."
 )
+
+st.sidebar.divider()
+st.sidebar.markdown("Made by Jan Schuetzke")
+col1, col2, col3, col4 = st.sidebar.columns(4)
+col1.markdown("[![LinkedIn-Icon](https://img.icons8.com/ios-filled/50/linkedin.png)](https://www.linkedin.com/in/jan-schuetzke/)")
+col2.markdown("[![Github-Icon](https://img.icons8.com/ios-filled/50/github.png)](https://github.com/jschuetzke)")
+col3.markdown("[![GScholar-Icon](https://img.icons8.com/ios/50/google-scholar--v2.png)](https://scholar.google.com/citations?user=WI2xAokAAAAJ&hl=en)")
+col4.markdown("[![Website-Icon](https://img.icons8.com/ios/50/domain--v1.png)](https://jschuetzke.github.io)")
+st.sidebar.markdown("Icons by [Icon8](https://icons8.com)")
