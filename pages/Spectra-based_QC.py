@@ -145,7 +145,7 @@ def generate_variations(
     # x *= np.maximum(1 - fwhm, 0.35)[:, None]
     x = generate_noise(
         x,
-        noise_lvl=0
+        noise_lvl=0.
     )
     # add noise, clip extreme values
     gaus = 1 / 3 * np.clip(rng.normal(0, 1, x.shape), -3, 3)
