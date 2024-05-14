@@ -14,7 +14,7 @@ st.markdown("Analyzing spectroscopic signals presents various challenges, includ
 
 st.markdown("So far, researchers have successfully applied neural networks to tackle challenges in the interpretation of [Raman spectra](https://www.nature.com/articles/s41467-019-12898-9), [NIR spectra](https://www.sciencedirect.com/science/article/pii/S0023643821016091), [NMR spectra](https://www.nature.com/articles/s41467-022-33879-5), and [XRD patterns](https://journals.iucr.org/m/issues/2021/03/00/fc5051/index.html), among others, showcasing their potential across various spectroscopic domains.")
 
-st.markdown("Explore the versatility of neural networks in spectroscopic analysis through this web application.")
+st.markdown("Explore how neural networks can be efficiently integrated for the automated analysis of spectroscopic data through this web application.")
 
 st.sidebar.success("Select a demo above.")
 
